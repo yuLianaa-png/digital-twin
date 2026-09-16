@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Twin - Invernadero inteligente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow:hidden; }
+        #canvas-container {width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: -1;}
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans h-screen felx flex-col justify-between p-4 pointer-events-none">
+    <div id="canvas-container" class="pointer-events-auto"></div>
+
+    <!-- panel superior-->
+    <header class="bg-gray-800/80 p-4 rounded-xl flex justify-between items-center max-w-4xl mx-auto w-full pointer-events-auto">
+        <h1 class="text-xl font-bold text-green-400">Invernadero IoT</h1>
+        <div class="flex gap-4">
+            <div class="bg-gray-700 px-3 py-1 rounded text-sm">Batería: <span id="bat-val" class="font-mono text-green-300">100%</span></div>
+        </div>
+    </header>
+
+    <!-- panel botones -->
+    <div class="absolute left-24 top-44 flex flex-col gap-4 pointer-events-auto">
+        <button id="btn-water" class="bg-blue-600 hover:bg-blue-500 w-64 py-3 rounded-lg font-bold shadow-lg transition-transform active:scale-95 text-left pl-6">Activar Riego</button>
+        <button id="btn-fert" class="bg-green-600 hover:bg-green-500 w-64 py-3 rounded-lg font-bold shadow-lg transition-transform active:scale-95 text-left pl-6">Activar Abono</button>
+        <button id="btn-light" class="bg-yellow-600 hover:bg-yellow-500 w-64 py-3 rounded-lg font-bold shadow-lg transition-transform active:scale-95 text-left pl-6">Prender Luces</button>
+    </div>
+
+    <!--telemetria-->
+    <!-- Panel Derecho -->
+    <div class="absolute right-12 top-24 bg-gray-800/90 p-5 rounded-xl border border-gray-700 w-80 pointer-events-auto shadow-2xl backdrop-blur-sm">
+        <h2 class="text-lg font-bold text-green-400 mb-4 border-b border-gray-600 pb-2"> Telemetría por Zona</h2>
+        
+        <div class="flex flex-col gap-3">
+            <!-- Zona 1 -->
+            <div class="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-1">
+                <span class="font-bold text-sm text-gray-300">Zona 1 (Noroeste)</span>
+                <div class="flex justify-between items-center text-sm">
+                    <span> Suelo: <span id="hum-z1" class="text-blue-300 font-mono">65%</span></span>
+                    <button id="btn-luz-z1" class="bg-gray-600 hover:bg-yellow-600 text-white text-xs px-2 py-1 rounded transition-colors">Encender Luz</button>
+                    <button id="btn-riego-z1" class="bg-gray-600 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors">Regar</button>
+                </div>
+            </div>
+
+            <!-- Zona 2 -->
+            <div class="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-1">
+                <span class="font-bold text-sm text-gray-300">Zona 2 (Noreste)</span>
+                <div class="flex justify-between items-center text-sm">
+                    <span> Suelo: <span id="hum-z2" class="text-blue-300 font-mono">100%</span></span>
+                    <button id="btn-luz-z2" class="bg-gray-600 hover:bg-yellow-600 text-white text-xs px-2 py-1 rounded transition-colors">Encender Luz</button>
+                    <button id="btn-riego-z2" class="bg-gray-600 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors">Regar</button>
+                </div>
+            </div>
+
+            <!-- Zona 3 -->
+            <div class="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-1">
+                <span class="font-bold text-sm text-gray-300">Zona 3 (Suroeste)</span>
+                <div class="flex justify-between items-center text-sm">
+                    <span> Suelo: <span id="hum-z3" class="text-blue-300 font-mono">55%</span></span>
+                    <button id="btn-luz-z3" class="bg-gray-600 hover:bg-yellow-600 text-white text-xs px-2 py-1 rounded transition-colors">Encender Luz</button>
+                    <button id="btn-riego-z3" class="bg-gray-600 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors">Regar</button>
+                </div>
+            </div>
+
+            <!-- Zona 4 -->
+            <div class="bg-gray-700/50 p-3 rounded-lg flex flex-col gap-1">
+                <span class="font-bold text-sm text-gray-300">Zona 4 (Sureste)</span>
+                <div class="flex justify-between items-center text-sm">
+                    <span> Suelo: <span id="hum-z4" class="text-blue-300 font-mono">60%</span></span>
+                    <button id="btn-luz-z4" class="bg-gray-600 hover:bg-yellow-600 text-white text-xs px-2 py-1 rounded transition-colors">Encender Luz</button>
+                    <button id="btn-riego-z4" class="bg-gray-600 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors">Regar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- libreria three -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- herramienta para rotar camara con mouse -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- herramienta para cargar modelos 3D -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    
+    <!-- conectar archivo con logica -->
+    <script src="main.js"></script>
+    <script src="mockAPI.js"></script>
+</body>
+</html>
