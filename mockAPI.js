@@ -1,97 +1,22 @@
 //simulacion hardware
 
-//bateria %
-let bateria = 100;
+// (JSON)
+// formato exacto que ESP32 deberá enviar y recibir
+let estadoInvernadero = {
+    telemetria: {
+        bateria: 100,
+        humedades: [65, 100, 55, 60],
+        nutricion: [41, 60, 58, 100]
+    },
+    actuadores: {
+        riego: false,
+        abono: false,
+        luces: [false, false, false, false]
+    }
+};
+
+// Referencias del DOM
 const elementoBateria = document.getElementById("bat-val");
-
-setInterval(() => {
-    if (bateria > 0){
-        bateria -= 1;
-        elementoBateria.innerText = bateria + "%";
-
-        if (bateria <= 20) {
-            elementoBateria.style.color = "red";
-    }else if (bateria <= 50) {
-        elementoBateria.style.color = "orange";
-    }
-}
-}, 5000);
-
-const btnWater = document.getElementById("btn-water");
-const btnFert = document.getElementById("btn-fert");
-const btnLight = document.getElementById("btn-light");
-
-let riegoActivo = false;
-let abonoActivo = false;
-let luzActiva = false;
-
-//botones riego
-const btnRiegoZ1 = document.getElementById('btn-riego-z1');
-const btnRiegoZ2 = document.getElementById('btn-riego-z2');
-const btnRiegoZ3 = document.getElementById('btn-riego-z3');
-const btnRiegoZ4 = document.getElementById('btn-riego-z4');
-
-const botonesZonasRiego = [btnRiegoZ1, btnRiegoZ2, btnRiegoZ3, btnRiegoZ4];
-
-let estadoRiego = [false, false, false, false];
-
-for (let i = 0; i < botonesZonasRiego.length; i++) {
-    botonesZonasRiego[i].addEventListener("click", () => {
-        estadoRiego[i] = !estadoRiego[i];
-
-        if (estadoRiego[i]) {
-            botonesZonasRiego[i].innerText = "Detener Riego";
-            botonesZonasRiego[i].classList.replace('bg-gray-600', 'bg-blue-600');
-            
-            if (window.bombas && window.bombas[i]) {
-                window.bombas[i].material.color.setHex(0x00aaff); // Bomba encendida
-            }
-        } else {
-            botonesZonasRiego[i].innerText = "Regar";
-            botonesZonasRiego[i].classList.replace('bg-blue-600', 'bg-gray-600');
-            
-            if (window.bombas && window.bombas[i]) {
-                window.bombas[i].material.color.setHex(0x224455); // Bomba apagada
-            }
-        }
-    });
-}
-
-//boton riego general
-btnWater.addEventListener("click", () => {
-
-    riegoActivo = !riegoActivo;
-    if (riegoActivo) {
-        btnWater.innerText = "Detener Riego";
-        btnWater.classList.replace('bg-blue-600', 'bg-red-600');
-        btnWater.classList.replace('hover:bg-blue-500', 'hover:bg-red-500');
-        
-        for (let i = 0; i < 4; i++) {
-            estadoRiego[i] = true;
-            botonesZonasRiego[i].innerText = "Detener Riego";
-            botonesZonasRiego[i].classList.replace('bg-gray-600', 'bg-blue-600');
-            if(window.bombas && window.bombas[i]) {
-                window.bombas[i].material.color.setHex(0x00aaff);
-            }
-        }
-
-    } else {
-        btnWater.innerText = "Activar Riego";
-        btnWater.classList.replace('bg-red-600', 'bg-blue-600');
-        btnWater.classList.replace('hover:bg-red-500', 'hover:bg-blue-500');
-        for (let i = 0; i < 4; i++) {
-            estadoRiego[i] = false;
-            botonesZonasRiego[i].innerText = "Regar";
-            botonesZonasRiego[i].classList.replace('bg-blue-600', 'bg-gray-600');
-            if(window.bombas && window.bombas[i]) {
-                window.bombas[i].material.color.setHex(0x224455);
-            }
-        }
-    }
-});
-
-//humedad suelo %
-let humedadZonas = [65, 100, 55, 60];
 
 const elementoHumedad = [
     document.getElementById("hum-z1"),
@@ -99,154 +24,191 @@ const elementoHumedad = [
     document.getElementById("hum-z3"),
     document.getElementById("hum-z4")
 ];
+const elementoNutricion = [
+    document.getElementById("nut-z1"),
+    document.getElementById("nut-z2"),
+    document.getElementById("nut-z3"),
+    document.getElementById("nut-z4")
+];
 
-setInterval(() => {
-    for (let i = 0; i < humedadZonas.length; i++) {
-        if (estadoRiego[i]) {
-            if(humedadZonas[i] < 100) {
-                humedadZonas[i] += Math.floor(Math.random() * 7) + 1; //incremento aleatorio entre 1 y 7
-                if (humedadZonas[i] >= 100) {
-                    humedadZonas[i] = 100;
-                    botonesZonasRiego[i].click(); //detener riego si llega a 100%
-                }
-            }
+const btnWater = document.getElementById("btn-water");
+const btnFert = document.getElementById("btn-fert");
+const btnLight = document.getElementById("btn-light");
+const botonesZonasLuces = [
+    document.getElementById("btn-luz-z1"),
+    document.getElementById("btn-luz-z2"),
+    document.getElementById("btn-luz-z3"),
+    document.getElementById("btn-luz-z4")
+];
+
+// simula recibir un mensaje por WebSocket
+function procesarMensajeESP32(datosReales) {
+    // actualiza bateria
+    elementoBateria.innerText = Math.floor(datosReales.telemetria.bateria) + "%";
+    elementoBateria.style.color = datosReales.telemetria.bateria <= 20 ? "red" : (datosReales.telemetria.bateria <= 50 ? "orange" : "");
+
+    for (let i = 0; i < datosReales.telemetria.humedades.length; i++) {
+        // actualiza humedad por zonas
+        let hum = datosReales.telemetria.humedades[i];
+        elementoHumedad[i].innerText = hum + "%";
+        elementoHumedad[i].className = hum <= 47 ? "text-orange-400 font-mono font-bold" : "text-blue-300 font-mono";
+        
+        //actualiza nutricion por zona
+        let nut = datosReales.telemetria.nutricion[i];
+
+        if(nut <= 30){
+            elementoNutricion[i].innerHTML = nut + "% <span title='Nutrición crítica'>⚠️</span>";
+            elementoNutricion[i].className = "text-red-400 font-mono font-bold animate-pulse";
+
         }else{
-            if(humedadZonas[i] > 0) {
-                humedadZonas[i] -= Math.floor(Math.random() * 2);
-            }
+            elementoNutricion[i].innerText = nut + "%";
+            elementoNutricion[i].className = "text-green-400 font-mono";
         }
-
-        elementoHumedad[i].innerText = humedadZonas[i] + "%";
-
-        if (humedadZonas[i] <= 47) {
-            elementoHumedad[i].className = "text-orange-400 font-mono font-bold";
-            if (!estadoRiego[i] && humedadZonas[i] <= 40) {
-                botonesZonasRiego[i].click(); //activar riego si la humedad es baja y no está regando
-            }
-        } else {
-            elementoHumedad[i].className = "text-blue-300 font-mono";
-        }
-
     }
-}, 4000);
 
-//botones abono
-/*
-let nivelTanqueAbono = 100; 
-let nutrientesZonas = [40, 45, 35, 50]; 
-let estadoAbono = [false, false, false, false]
+    // actualiza interfaz y 3d de las bombas
+    if (window.Controlador3D) {
+        window.Controlador3D.setEstadoBomba('riego', datosReales.actuadores.riego);
+        window.Controlador3D.setEstadoBomba('abono', datosReales.actuadores.abono);
+    }
+    
+    //Botón Riego
+    btnWater.innerText = datosReales.actuadores.riego ? "Detener Riego" : "Activar Riego";
+    btnWater.className = datosReales.actuadores.riego 
+        ? "bg-gradient-to-r from-red-700 to-red-500 hover:from-red-600 hover:to-red-400 w-64 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all active:scale-95 text-left pl-6 text-white border border-red-500/30 tracking-wide" 
+        : "bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-600 hover:to-blue-400 w-64 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition-all active:scale-95 text-left pl-6 text-white border border-blue-500/30 tracking-wide";
 
-const btnAbonoZ1 = document.getElementById("btn-abono-z1");
-const btnAbonoZ2 = document.getElementById("btn-abono-z2");
-const btnAbonoZ3 = document.getElementById("btn-abono-z3");
-const btnAbonoZ4 = document.getElementById("btn-abono-z4");
+    //Botón Abono
+    btnFert.innerText = datosReales.actuadores.abono ? "Detener Abono" : "Activar Abono";
+    btnFert.className = datosReales.actuadores.abono 
+        ? "bg-gradient-to-r from-red-700 to-red-500 hover:from-red-600 hover:to-red-400 w-64 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all active:scale-95 text-left pl-6 text-white border border-red-500/30 tracking-wide" 
+        : "bg-gradient-to-r from-green-700 to-green-500 hover:from-green-600 hover:to-green-400 w-64 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] transition-all active:scale-95 text-left pl-6 text-white border border-green-500/30 tracking-wide";
 
-const botonesZonasAbono = [btnAbonoZ1, btnAbonoZ2, btnAbonoZ3, btnAbonoZ4];
+    //Botones de Luces por Zona
+    for (let i = 0; i < datosReales.actuadores.luces.length; i++) {
+        let luzEncendida = datosReales.actuadores.luces[i];
+        if (window.Controlador3D) window.Controlador3D.setEstadoLuz(i, luzEncendida);
+        
+        botonesZonasLuces[i].innerText = luzEncendida ? "Apagar" : "Encender Luz";
+        botonesZonasLuces[i].className = luzEncendida 
+            ? "bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors shadow-[0_0_10px_rgba(234,179,8,0.5)] border border-yellow-400" 
+            : "bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600";
+    }
 
-for (let i = 0; i < botonesAbonoZonas.length; i++) {
-    botonesAbonoZonas[i].addEventListener("click", () => {
-        // 1. Invertimos el estado de la zona correspondiente
-        estadoAbono[i] = !estadoAbono[i];
-
-        // 2. Cambiamos el texto y el color del botón
-        if (estadoAbono[i]) {
-            botonesAbonoZonas[i].innerText = "Detener Abono";
-            // Usamos verde para diferenciarlo del azul del agua
-            botonesAbonoZonas[i].classList.replace('bg-gray-600', 'bg-green-600'); 
-        } else {
-            botonesAbonoZonas[i].innerText = "Abonar";
-            botonesAbonoZonas[i].classList.replace('bg-green-600', 'bg-gray-600');
-        }
-    });
-}*/
-
-//boton abono
-btnFert.addEventListener("click", () => {
-    abonoActivo = !abonoActivo;
-    if (abonoActivo) {
-        btnFert.innerText = "Detener Abono";
-        btnFert.classList.replace('bg-green-600', 'bg-red-600');
-        btnFert.classList.replace('hover:bg-green-500', 'hover:bg-red-500');
-        console.log("Bomba de abonado activado");
+    let todasLasLucesEncendidas = !datosReales.actuadores.luces.includes(false);
+    
+    if (todasLasLucesEncendidas) {
+        btnLight.innerText = "Apagar Luces";
+        btnLight.className = "bg-red-600 hover:bg-red-500 w-64 py-3 rounded-lg font-bold shadow-[0_0_15px_rgba(239,68,68,0.5)] hover:shadow-[0_0_25px_rgba(239,68,68,0.8)] transition-all active:scale-95 text-left pl-6 text-white";
     } else {
-        btnFert.innerText = "Activar Abono";
-        btnFert.classList.replace('bg-red-600', 'bg-green-600');
-        btnFert.classList.replace('hover:bg-red-500', 'hover:bg-green-500');
-        console.log("Bomba de abonado desactivado");
+        btnLight.innerText = "Prender Luces";
+        btnLight.className = "bg-yellow-600 hover:bg-yellow-500 w-64 py-3 rounded-lg font-bold shadow-[0_0_15px_rgba(234,179,8,0.5)] hover:shadow-[0_0_25px_rgba(234,179,8,0.8)] transition-all active:scale-95 text-left pl-6 text-white";
     }
+}
+
+// simula envios de comandos a la esp32
+function enviarComandoAlESP32() {
+    //aqui debera ir WebSocket: socket.send(JSON.stringify(estadoInvernadero.actuadores))
+    procesarMensajeESP32(estadoInvernadero); // autoactualiza para simulación
+}
+
+// evento botones
+btnWater.addEventListener("click", () =>{
+    estadoInvernadero.actuadores.riego = !estadoInvernadero.actuadores.riego;
+
+    if(!estadoInvernadero.actuadores.riego && estadoInvernadero.actuadores.abono){
+        estadoInvernadero.actuadores.abono = false;
+    }
+    enviarComandoAlESP32();
 });
 
-//botenes luz por zona
-const btnLuZ1 = document.getElementById("btn-luz-z1");
-const btnLuZ2 = document.getElementById("btn-luz-z2");
-const btnLuZ3 = document.getElementById("btn-luz-z3");
-const btnLuZ4 = document.getElementById("btn-luz-z4");
-const botonesZonasLuces = [btnLuZ1, btnLuZ2, btnLuZ3, btnLuZ4];
+btnFert.addEventListener("click", () => {
+    estadoInvernadero.actuadores.abono = !estadoInvernadero.actuadores.abono
 
-let estadoLuces = [false, false, false, false];
+    if(estadoInvernadero.actuadores.abono && estadoInvernadero.actuadores.riego){
+        estadoInvernadero.actuadores.riego = true;
+    }
+    enviarComandoAlESP32();
+});
+
+btnLight.addEventListener("click", () => {
+    let prenderTodas = estadoInvernadero.actuadores.luces.includes(false);
+    estadoInvernadero.actuadores.luces = [prenderTodas, prenderTodas, prenderTodas, prenderTodas];
+    enviarComandoAlESP32();
+});
 
 for (let i = 0; i < botonesZonasLuces.length; i++) {
     botonesZonasLuces[i].addEventListener("click", () => {
-        // 1. Invertir el estado de la luz específica
-        estadoLuces[i] = !estadoLuces[i];
-
-        // 2. Lógica visual y 3D
-        if (estadoLuces[i]) {
-            botonesZonasLuces[i].innerText = "Apagar Luz";
-            botonesZonasLuces[i].classList.replace('bg-gray-600', 'bg-yellow-500');
-            
-            if (window.lucesZonas && window.lucesZonas[i]) {
-                window.lucesZonas[i].luz.intensity = 2; // encender la luz virtual
-                window.lucesZonas[i].fisica.material.color.setHex(0xff00ff); // color magenta
-            }
-        } else {
-            botonesZonasLuces[i].innerText = "Encender Luz";
-            botonesZonasLuces[i].classList.replace('bg-yellow-500', 'bg-gray-600');
-            
-            if (window.lucesZonas && window.lucesZonas[i]) {
-                window.lucesZonas[i].luz.intensity = 0; // apagar la luz virtual
-                window.lucesZonas[i].fisica.material.color.setHex(0x555555); // color gris
-            }
-        }
+        estadoInvernadero.actuadores.luces[i] = !estadoInvernadero.actuadores.luces[i];
+        enviarComandoAlESP32();
     });
 }
 
-//boton luz general
-btnLight.addEventListener("click", () => {
-    luzActiva = !luzActiva;
+// reemplaza la lectura de los sensores del esp32, mientras
+setInterval(() => {
+    //bateria
+    let consumo = 0;
+    if(estadoInvernadero.actuadores.riego) consumo += 2;
+    if(estadoInvernadero.actuadores.abono) consumo += 2;
 
-    if (luzActiva) {
-        btnLight.innerText = "Apagar Luz";
-        btnLight.classList.replace('bg-yellow-600', 'bg-red-600');
-        btnLight.classList.replace('hover:bg-yellow-500', 'hover:bg-red-500');
-        btnLight.classList.replace('text-gray-900', 'text-white');
+    let lucesEncendidas = estadoInvernadero.actuadores.luces.filter(luz => luz === true).length;
+    consumo += lucesEncendidas * 1;
 
-        for (let i = 0; i < 4; i++) {
-            estadoLuces[i] = true;
-            botonesZonasLuces[i].innerText = "Apagar Luz";
-            botonesZonasLuces[i].classList.replace('bg-gray-600', 'bg-yellow-500');
+    if(consumo > 0){
+        estadoInvernadero.telemetria.bateria -= consumo;
+        if(estadoInvernadero.telemetria.bateria < 0) estadoInvernadero.telemetria.bateria = 0;
+    } else {
+        estadoInvernadero.telemetria.bateria += 2;
+        if (estadoInvernadero.telemetria.bateria > 100) estadoInvernadero.telemetria.bateria = 100;
+    }
 
-            if (window.lucesZonas && window.lucesZonas[i]) {
-                window.lucesZonas[i].luz.intensity = 2; //encender la luz virtual
-                window.lucesZonas[i].fisica.material.color.setHex(0xff00ff); //cambiar color de la lampara a magenta
+
+    let todasAlMaximo = true;
+    for (let i = 0; i < estadoInvernadero.telemetria.humedades.length; i++) {
+        //humedad
+        if (estadoInvernadero.actuadores.riego) {
+            if (estadoInvernadero.telemetria.humedades[i] < 100) {
+                estadoInvernadero.telemetria.humedades[i] += Math.floor(Math.random() * 7) + 1;
+                if (estadoInvernadero.telemetria.humedades[i] > 100) estadoInvernadero.telemetria.humedades[i] = 100;
+            }
+        } else {
+            if (estadoInvernadero.telemetria.humedades[i] > 0) {
+                estadoInvernadero.telemetria.humedades[i] -= Math.floor(Math.random() * 2);
             }
         }
 
-    } else {
-        btnLight.innerText = "Prender Luz";
-        btnLight.classList.replace('bg-red-600', 'bg-yellow-600');
-        btnLight.classList.replace('hover:bg-red-500', 'hover:bg-yellow-500');
-        btnLight.classList.replace('text-white', 'text-gray-900');
+        if (estadoInvernadero.telemetria.humedades[i] < 100) todasAlMaximo = false;
+        
+        //riego automatico
+        if (!estadoInvernadero.actuadores.riego && estadoInvernadero.telemetria.humedades[i] <= 40) {
+            estadoInvernadero.actuadores.riego = true;
+        }
 
-        for (let i = 0; i < 4; i++) {
-            estadoLuces[i] = false;
-            botonesZonasLuces[i].innerText = "Encender Luz";
-            botonesZonasLuces[i].classList.replace('bg-yellow-500', 'bg-gray-600');
-
-            if (window.lucesZonas && window.lucesZonas[i]) {
-                window.lucesZonas[i].luz.intensity = 0; //apagar la luz virtual
-                window.lucesZonas[i].fisica.material.color.setHex(0x555555); //cambiar color de la lampara a gris
+        //nutricion
+        if (estadoInvernadero.actuadores.abono && estadoInvernadero.actuadores.riego) {
+            if (estadoInvernadero.telemetria.nutricion[i] < 100) {
+                estadoInvernadero.telemetria.nutricion[i] += Math.floor(Math.random() * 4) + 1;
+                if (estadoInvernadero.telemetria.nutricion[i] > 100) estadoInvernadero.telemetria.nutricion[i] = 100;
+            }
+        } else {
+            if (estadoInvernadero.telemetria.nutricion[i] > 0 && Math.random() > 0.6) {
+                estadoInvernadero.telemetria.nutricion[i] -= 1;
             }
         }
     }
-});
+
+    //apaga riego al llegar a 100%
+    if (todasAlMaximo && estadoInvernadero.actuadores.riego) {
+        estadoInvernadero.actuadores.riego = false;
+        if (estadoInvernadero.actuadores.abono) {
+            estadoInvernadero.actuadores.abono = false;
+        }
+    }
+
+    // refresca la vista con los nuevos datos simulados
+    procesarMensajeESP32(estadoInvernadero);
+
+}, 4000);
+
+// se ejecuta una vez al inicio para pintar el estado por defecto
+procesarMensajeESP32(estadoInvernadero);
