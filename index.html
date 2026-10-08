@@ -13,7 +13,7 @@
 <body class="bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white font-sans h-screen flex flex-col justify-between p-4 pointer-events-none">
     <div id="canvas-container" class="pointer-events-auto"></div>
 
-    <!-- Panel superior-->
+    <!--panel de arriba-->
     <header class="bg-gray-900/40 backdrop-blur-md border border-gray-700/50 p-4 rounded-2xl flex justify-between items-center max-w-4xl mx-auto w-full pointer-events-auto shadow-lg mt-2">
         <h1 class="text-xl font-bold text-green-400 tracking-wide">Invernadero IoT</h1>
         <div class="flex gap-4">
@@ -23,27 +23,53 @@
         </div>
     </header>
 
-    <!-- Panel botones principales-->
-    <div class="absolute left-12 md:left-24 top-44 flex flex-col gap-5 pointer-events-auto">
-        <button id="btn-water" class="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-600 hover:to-blue-400 w-64 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition-all active:scale-95 text-left pl-6 text-white border border-blue-500/30 tracking-wide">
-            Activar Riego
+    <!--panel izquierdo-->
+    <!--botones principales-->
+    <div class="absolute left-12 md:left-24 top-32 flex flex-col gap-6 pointer-events-auto w-72">
+        
+        <!-- Panel 1: Estanque de Agua Pura -->
+        <div class="bg-blue-950/60 p-5 rounded-2xl border border-blue-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md">
+            <h2 class="text-sm font-bold text-blue-300 mb-4 border-b border-blue-500/50 pb-2 tracking-wide">Control Agua Pura</h2>
+            <div class="flex justify-between mb-4 text-xs bg-gray-900/50 p-2 rounded-lg border border-gray-700">
+                <span class="text-gray-400">Nivel: <span id="nivel-agua" class="font-mono font-bold text-blue-400 text-sm ml-1">100%</span></span>
+                <span class="text-gray-400">Caudal: <span id="caudal-agua" class="font-mono font-bold text-white text-sm ml-1">0 L/m</span></span>
+            </div>
+            <div class="space-y-2">
+                <button id="btn-valvula-a1" class="w-full bg-gray-800 hover:bg-blue-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 1 (Cerrada)</button>
+                <button id="btn-valvula-a2" class="w-full bg-gray-800 hover:bg-blue-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 2 (Cerrada)</button>
+            </div>
+            <!--SIMULACION FUGA-->
+            <button id="btn-fuga-a1" class="w-full bg-red-900/40 hover:bg-red-800 border border-red-500/50 text-white text-xs font-bold py-1.5 rounded-lg transition-all active:scale-95 text-center mt-2 opacity-80">🚨 Provocar Rotura Línea 1</button>
+        </div>
+
+        <!-- Panel 2: Estanque de Fertirrigación -->
+        <div class="bg-green-950/60 p-5 rounded-2xl border border-green-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md">
+            <h2 class="text-sm font-bold text-green-400 mb-4 border-b border-green-500/50 pb-2 tracking-wide">Control Fertirrigación</h2>
+            <div class="flex justify-between mb-4 text-xs bg-gray-900/50 p-2 rounded-lg border border-gray-700">
+                <span class="text-gray-400">Nivel: <span id="nivel-abono" class="font-mono font-bold text-green-400 text-sm ml-1">100%</span></span>
+                <span class="text-gray-400">Caudal: <span id="caudal-abono" class="font-mono font-bold text-white text-sm ml-1">0 L/m</span></span>
+            </div>
+            <div class="space-y-2">
+                <button id="btn-valvula-f1" class="w-full bg-gray-800 hover:bg-green-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 3 (Cerrada)</button>
+                <button id="btn-valvula-f2" class="w-full bg-gray-800 hover:bg-green-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 4 (Cerrada)</button>
+            </div>
+        </div>
+
+        <button id="btn-light" class="w-full bg-yellow-600 hover:bg-yellow-500 py-3.5 rounded-2xl font-bold shadow-[0_0_15px_rgba(234,179,8,0.4)] transition-all active:scale-95 text-center text-white border border-yellow-500/50 mt-2">
+                💡 Prender Todas las Luces
         </button>
-        <button id="btn-fert" class="bg-gradient-to-r from-green-700 to-green-500 hover:from-green-600 hover:to-green-400 w-64 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] transition-all active:scale-95 text-left pl-6 text-white border border-green-500/30 tracking-wide">
-            Activar Abono
-        </button>
-        <button id="btn-light" class="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 w-64 py-3.5 rounded-xl font-bold shadow-[0_0_15px_rgba(234,179,8,0.3)] hover:shadow-[0_0_25px_rgba(234,179,8,0.6)] transition-all active:scale-95 text-left pl-6 text-white border border-yellow-500/30 tracking-wide">
-            Prender Luces
-        </button>
+
     </div>
 
-    <!-- Panel telemetría -->
+    <!--panel derecho-->
+    <!--panel telemetria-->
     <div class="absolute right-8 md:right-12 top-24 bg-gray-900/50 p-6 rounded-3xl border border-gray-600/30 w-80 pointer-events-auto shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md">
         <h2 class="text-lg font-bold text-green-400 mb-5 border-b border-gray-600/50 pb-3 tracking-wide">Telemetría por Zona</h2>
         
         <div class="flex flex-col gap-4">
             <!-- Zona 1 -->
             <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 1 (Noroeste)</span>
+                <span class="font-bold text-sm text-gray-200">Zona 1</span>
                 <div class="flex justify-between items-center text-sm">
                     <span>Suelo: <span id="hum-z1" class="text-blue-300 font-mono">65%</span></span>
                     <button id="btn-luz-z1" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
@@ -55,7 +81,7 @@
 
             <!-- Zona 2 -->
             <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 2 (Noreste)</span>
+                <span class="font-bold text-sm text-gray-200">Zona 2</span>
                 <div class="flex justify-between items-center text-sm">
                     <span>Suelo: <span id="hum-z2" class="text-blue-300 font-mono">100%</span></span>
                     <button id="btn-luz-z2" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
@@ -67,7 +93,7 @@
 
             <!-- Zona 3 -->
             <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 3 (Suroeste)</span>
+                <span class="font-bold text-sm text-gray-200">Zona 3</span>
                 <div class="flex justify-between items-center text-sm">
                     <span>Suelo: <span id="hum-z3" class="text-blue-300 font-mono">55%</span></span>
                     <button id="btn-luz-z3" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
@@ -79,7 +105,7 @@
 
             <!-- Zona 4 -->
             <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 4 (Sureste)</span>
+                <span class="font-bold text-sm text-gray-200">Zona 4</span>
                 <div class="flex justify-between items-center text-sm">
                     <span>Suelo: <span id="hum-z4" class="text-blue-300 font-mono">60%</span></span>
                     <button id="btn-luz-z4" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
@@ -91,10 +117,23 @@
         </div>
     </div>
 
+    <!--PANEL ALERTAS-->
+     <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl pointer-events-auto">
+        <div class="bg-gray-900/80 border border-red-500/50 p-4 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.2)] backdrop-blur-md">
+            <h2 class="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
+                <span class="animate-pulse">⚠️</span> Monitor de Eventos Críticos (Enlace LoRa)
+            </h2>
+            <ul id="lista-alertas" class="text-xs text-gray-300 space-y-1 h-16 overflow-y-auto font-mono">
+                <li class="text-green-400">🟢 Recibiendo paquetes. Sistemas operando con normalidad.</li>
+            </ul>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="main.js"></script>
+    <script src="alertas.js"></script>
     <script src="mockAPI.js"></script>
 </body>
 </html>

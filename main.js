@@ -20,32 +20,46 @@ scene.add(directionalLight);
 //controlador centralizado para modificar el 3D desde fuera
 window.Controlador3D = {
     luces: [],
+    manguerasAgua: [],
+    manguerasAbono: [],
     bombas: {},
-    mangueras: {},
     
     setEstadoLuz: function(index, encendida) {
         if (this.luces[index]) {
-            this.luces[index].luz.intensity = encendida ? 3 : 0; // Intensidad subida a 3
+            this.luces[index].luz.intensity = encendida ? 3 : 0; 
             this.luces[index].fisica.material.color.setHex(encendida ? 0xff00ff : 0x555555);
         }
     },
     
-    setEstadoBomba: function(tipo, encendida) {
-        if (!this.bombas) this.bombas = {};
-        if (!this.mangueras) this.mangueras = {};
+    setEstadoValvula: function(tipo, linea, encendida) {
+        const colorAgua = 0x00aaff;
+        const colorAbono = 0x22cc44;
+        const apagadoAgua = 0x114455;
+        const apagadoAbono = 0x115522;
 
-        const colorEncendida = tipo === 'riego' ? 0x00aaff : 0x22cc44;
-        const colorApagado = 0x224455;
-        const colorFinal = encendida ? colorEncendida : colorApagado;
-
-        if (this.bombas[tipo]) {
-            this.bombas[tipo].material.color.setHex(colorFinal);
+        if (tipo === 'agua' && this.manguerasAgua[linea]) {
+            let manguera = this.manguerasAgua[linea];
+            manguera.material.color.setHex(encendida ? colorAgua : apagadoAgua);
+            manguera.material.emissive.setHex(encendida ? colorAgua : 0x000000);
+            manguera.material.emissiveIntensity = encendida ? 0.6 : 0;
+        }
+        if (tipo === 'abono' && this.manguerasAbono[linea]) {
+            let manguera = this.manguerasAbono[linea];
+            manguera.material.color.setHex(encendida ? colorAbono : apagadoAbono);
+            manguera.material.emissive.setHex(encendida ? colorAbono : 0x000000);
+            manguera.material.emissiveIntensity = encendida ? 0.6 : 0;
         }
 
-        if(this.mangueras[tipo]){
-            this.mangueras[tipo].material.color.setHex(colorFinal);
-            this.mangueras[tipo].material.emissive.setHex(encendida ? colorFinal : 0x000000);
-            this.mangueras[tipo].material.emissiveIntensity = encendida ? 0.6 : 0;
+        // 2. Iluminar motores usando los comandos especiales
+        if (tipo === 'motor_agua' && this.bombas['riego']) {
+            this.bombas['riego'].material.color.setHex(encendida ? colorAgua : apagadoAgua);
+            this.bombas['riego'].material.emissive.setHex(encendida ? colorAgua : 0x000000);
+            this.bombas['riego'].material.emissiveIntensity = encendida ? 0.6 : 0;
+        }
+        if (tipo === 'motor_abono' && this.bombas['abono']) {
+            this.bombas['abono'].material.color.setHex(encendida ? colorAbono : apagadoAbono);
+            this.bombas['abono'].material.emissive.setHex(encendida ? colorAbono : 0x000000);
+            this.bombas['abono'].material.emissiveIntensity = encendida ? 0.6 : 0;
         }
     }
 };
@@ -95,18 +109,20 @@ function crearLampara(x, y, z) {
 }
 
 crearLampara(-0.3, 0.5, -0.3); // zona 1
-crearLampara(0.3, 0.5, -0.3);  // zona 2
-crearLampara(-0.3, 0.5, 0.3);  // zona 3
+crearLampara(-0.3, 0.5, 0.3);  // zona 2
+
+crearLampara(0.3, 0.5, -0.3);  // zona 3
 crearLampara(0.3, 0.5, 0.3);   // zona 4
 
 // bombas
 function crearBomba(x, y, z, tipo) {
     const geometry = new THREE.CylinderGeometry(0.20, 0.20, 0.42, 16);
-    const material = new THREE.MeshBasicMaterial({ color: 0x224455 });
+    const material = new THREE.MeshStandardMaterial({ color: 0x224455, roughness: 0.4 });
     const bomba = new THREE.Mesh(geometry, material);
     bomba.position.set(x, y, z);
     scene.add(bomba);
 
+    if(!window.Controlador3D.bombas) window.Controlador3D.bombas = {};
     window.Controlador3D.bombas[tipo] = bomba;
 }
 
@@ -114,34 +130,38 @@ crearBomba(-0.3, 0.1, -1.2, 'riego');
 crearBomba(0.3, 0.1, -1.2, 'abono');
 
 //mangueras
-function crearManguera(puntos, tipo) {
-    const curva = new THREE.CatmullRomCurve3(puntos);
-    const geometry = new THREE.TubeGeometry(curva, 30, 0.015, 8, false);
+const P = (x, z, y = -0.05) => new THREE.Vector3(x, y, z);
+ 
+// Borde derecho del invernadero (donde terminan las mangueras). Ajusta si hace falta.
+const BORDE_Z = -0.66;
+ 
+function crearManguera(puntos) {
+    const curva = new THREE.CatmullRomCurve3(puntos, false, 'centripetal');
+    const geometry = new THREE.TubeGeometry(curva, 120, 0.012, 8, false);
     const material = new THREE.MeshStandardMaterial({ color: 0x224455, roughness: 0.4, metalness: 0.1 });
     const manguera = new THREE.Mesh(geometry, material);
     scene.add(manguera);
-
-    if (!window.Controlador3D.mangueras) window.Controlador3D.mangueras = {};
-    window.Controlador3D.mangueras[tipo] = manguera;
     return manguera;
 }
-
-//manguera abono
-const puntosAbono = [
-    new THREE.Vector3(0.3, 0.15, -1.15),
-    new THREE.Vector3(0.3, 0.02, -1.05),
-    new THREE.Vector3(0.15, 0.02, -0.9),
-    new THREE.Vector3(0.0, 0.02, -0.8)
-];
-crearManguera(puntosAbono, 'abono');
-
-//manguera agua
-const puntosAgua = [
-    new THREE.Vector3(-0.3, 0.15, -1.15),
-    new THREE.Vector3(-0.3, 0.02, -1.05),
-    new THREE.Vector3(-0.15, 0.02, -0.9),
-    new THREE.Vector3(0.0, 0.02, -0.8),
-    new THREE.Vector3(0.0, 0.02, -0.75),
-    new THREE.Vector3(0.0, -0.1, -0.65)
-];
-crearManguera(puntosAgua, 'riego');
+ 
+// Línea 1 (AGUA, arriba)
+window.Controlador3D.manguerasAgua[0] = crearManguera([
+    P(-0.30, -1.18, 0.12), P(-0.31, -0.92), P(-0.32, -0.78), P(-0.32, BORDE_Z)
+]);
+ 
+// Línea 2 (AGUA, abajo)
+window.Controlador3D.manguerasAgua[1] = crearManguera([
+    P(-0.12, -1.18, 0.12), P(-0.07, -0.93), P(0.04, -0.85), P(0.12, -0.78),
+    P(0.23, -0.75), P(0.29, BORDE_Z)
+]);
+ 
+// Línea 3 (ABONO, arriba)
+window.Controlador3D.manguerasAbono[0] = crearManguera([
+    P(0.20, -1.18, 0.10), P(0.07, -0.95, 0.02), P(-0.03, -0.86),
+    P(-0.14, -0.76), P(-0.24, -0.68), P(-0.25, BORDE_Z)
+]);
+ 
+// Línea 4 (ABONO, abajo)
+window.Controlador3D.manguerasAbono[1] = crearManguera([
+    P(0.30, -1.18, 0.12), P(0.31, -0.92), P(0.33, -0.78), P(0.35, BORDE_Z)
+]);
