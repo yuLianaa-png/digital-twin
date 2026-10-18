@@ -35,11 +35,11 @@
                 <span class="text-gray-400">Caudal: <span id="caudal-agua" class="font-mono font-bold text-white text-sm ml-1">0 L/m</span></span>
             </div>
             <div class="space-y-2">
-                <button id="btn-valvula-a1" class="w-full bg-gray-800 hover:bg-blue-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 1 (Cerrada)</button>
-                <button id="btn-valvula-a2" class="w-full bg-gray-800 hover:bg-blue-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 2 (Cerrada)</button>
+                <button id="btn-valvula-a1" class="w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default">⭕ Válvula Agua Grupo Superior - Z1 y Z2 (Cerrada)</button>
+                <button id="btn-valvula-a2" class="w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default">⭕ Válvula Agua Grupo Inferior - Z3 y Z4 (Cerrada)</button>
             </div>
             <!--SIMULACION FUGA-->
-            <button id="btn-fuga-a1" class="w-full bg-red-900/40 hover:bg-red-800 border border-red-500/50 text-white text-xs font-bold py-1.5 rounded-lg transition-all active:scale-95 text-center mt-2 opacity-80">🚨 Provocar Rotura Línea 1</button>
+            <button id="btn-fuga-a1" class="w-full bg-red-900/40 hover:bg-red-800 border border-red-500/50 text-white text-xs font-bold py-1.5 rounded-lg transition-all active:scale-95 text-center mt-2 opacity-80">🚨 Provocar Rotura</button>
         </div>
 
         <!-- Panel 2: Estanque de Fertirrigación -->
@@ -50,8 +50,8 @@
                 <span class="text-gray-400">Caudal: <span id="caudal-abono" class="font-mono font-bold text-white text-sm ml-1">0 L/m</span></span>
             </div>
             <div class="space-y-2">
-                <button id="btn-valvula-f1" class="w-full bg-gray-800 hover:bg-green-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 3 (Cerrada)</button>
-                <button id="btn-valvula-f2" class="w-full bg-gray-800 hover:bg-green-700 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4">⭕ Válvula Línea 4 (Cerrada)</button>
+                <button id="btn-valvula-f1" class="w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default">⭕ Válvula Abono Grupo Superior - Z1 y Z2 (Cerrada)</button>
+                <button id="btn-valvula-f2" class="w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default">⭕ Válvula Abono Grupo Inferior - Z3 y Z4 (Cerrada)</button>
             </div>
         </div>
 
@@ -66,52 +66,34 @@
     <div class="absolute right-8 md:right-12 top-24 bg-gray-900/50 p-6 rounded-3xl border border-gray-600/30 w-80 pointer-events-auto shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md">
         <h2 class="text-lg font-bold text-green-400 mb-5 border-b border-gray-600/50 pb-3 tracking-wide">Telemetría por Zona</h2>
         
-        <div class="flex flex-col gap-4">
-            <!-- Zona 1 -->
-            <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 1</span>
-                <div class="flex justify-between items-center text-sm">
-                    <span>Suelo: <span id="hum-z1" class="text-blue-300 font-mono">65%</span></span>
-                    <button id="btn-luz-z1" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
+        <div class="flex flex-col gap-5">
+            <!-- Tarjeta Grupo Superior -->
+            <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-3 hover:bg-gray-800/60 transition-colors shadow-inner">
+                <span class="font-bold text-sm text-gray-200">Grupo Superior (Zonas 1 y 2)</span>
+                
+                <div class="flex justify-between items-center text-sm bg-gray-900/50 p-2 rounded-lg border border-gray-700/50">
+                    <span>Suelo: <span id="hum-g1" class="text-blue-300 font-mono font-bold">--%</span></span>
+                    <span>Nutrición: <span id="nut-g1" class="text-green-400 font-mono font-bold">--%</span></span>
                 </div>
-                <div class="flex justify-between items-center text-sm border-t border-gray-600/30 pt-2 mt-1">
-                    <span>Nutrición: <span id="nut-z1" class="text-green-400 font-mono">40%</span></span>
+
+                <div class="flex gap-2 justify-center border-t border-gray-600/30 pt-3">
+                    <button id="btn-luz-z1" class="w-full bg-gray-700 hover:bg-yellow-500 text-white text-xs px-2 py-2 rounded-lg transition-colors border border-gray-600 font-bold">💡 Luz Z1</button>
+                    <button id="btn-luz-z2" class="w-full bg-gray-700 hover:bg-yellow-500 text-white text-xs px-2 py-2 rounded-lg transition-colors border border-gray-600 font-bold">💡 Luz Z2</button>
                 </div>
             </div>
 
-            <!-- Zona 2 -->
-            <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 2</span>
-                <div class="flex justify-between items-center text-sm">
-                    <span>Suelo: <span id="hum-z2" class="text-blue-300 font-mono">100%</span></span>
-                    <button id="btn-luz-z2" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
+            <!-- Tarjeta Grupo Inferior -->
+            <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-3 hover:bg-gray-800/60 transition-colors shadow-inner">
+                <span class="font-bold text-sm text-gray-200">Grupo Inferior (Zonas 3 y 4)</span>
+                
+                <div class="flex justify-between items-center text-sm bg-gray-900/50 p-2 rounded-lg border border-gray-700/50">
+                    <span>Suelo: <span id="hum-g2" class="text-blue-300 font-mono font-bold">--%</span></span>
+                    <span>Nutrición: <span id="nut-g2" class="text-green-400 font-mono font-bold">--%</span></span>
                 </div>
-                <div class="flex justify-between items-center text-sm border-t border-gray-600/30 pt-2 mt-1">
-                    <span>Nutrición: <span id="nut-z2" class="text-green-400 font-mono">45%</span></span>
-                </div>
-            </div>
 
-            <!-- Zona 3 -->
-            <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 3</span>
-                <div class="flex justify-between items-center text-sm">
-                    <span>Suelo: <span id="hum-z3" class="text-blue-300 font-mono">55%</span></span>
-                    <button id="btn-luz-z3" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
-                </div>
-                <div class="flex justify-between items-center text-sm border-t border-gray-600/30 pt-2 mt-1">
-                    <span>Nutrición: <span id="nut-z3" class="text-green-400 font-mono">35%</span></span>
-                </div>
-            </div>
-
-            <!-- Zona 4 -->
-            <div class="bg-gray-800/40 border border-gray-700/50 p-4 rounded-2xl flex flex-col gap-2 hover:bg-gray-800/60 transition-colors shadow-inner">
-                <span class="font-bold text-sm text-gray-200">Zona 4</span>
-                <div class="flex justify-between items-center text-sm">
-                    <span>Suelo: <span id="hum-z4" class="text-blue-300 font-mono">60%</span></span>
-                    <button id="btn-luz-z4" class="bg-gray-700 hover:bg-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-gray-600">Luz</button>
-                </div>
-                <div class="flex justify-between items-center text-sm border-t border-gray-600/30 pt-2 mt-1">
-                    <span>Nutrición: <span id="nut-z4" class="text-green-400 font-mono">50%</span></span>
+                <div class="flex gap-2 justify-center border-t border-gray-600/30 pt-3">
+                    <button id="btn-luz-z3" class="w-full bg-gray-700 hover:bg-yellow-500 text-white text-xs px-2 py-2 rounded-lg transition-colors border border-gray-600 font-bold">💡 Luz Z3</button>
+                    <button id="btn-luz-z4" class="w-full bg-gray-700 hover:bg-yellow-500 text-white text-xs px-2 py-2 rounded-lg transition-colors border border-gray-600 font-bold">💡 Luz Z4</button>
                 </div>
             </div>
         </div>
@@ -134,6 +116,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="main.js"></script>
     <script src="alertas.js"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="mockAPI.js"></script>
 </body>
 </html>

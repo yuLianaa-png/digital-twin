@@ -1,7 +1,4 @@
-//simulacion hardware
-
-// (JSON)
-// formato exacto que ESP32 deberá enviar y recibir
+//hardware
 let estadoInvernadero = {
     telemetria: {
         bateria: 100,
@@ -16,7 +13,7 @@ let estadoInvernadero = {
         luces: [false, false, false, false]
     },
     anomalias: {
-        fugaLinea1: false
+        fugaDetectada: false
     }
 };
 
@@ -36,22 +33,16 @@ const btnValvulaF2 = document.getElementById("btn-valvula-f2");
 //BOTON FUGA
 const btnFugaA1 = document.getElementById("btn-fuga-a1");
 btnFugaA1.addEventListener("click", () => {
-    estadoInvernadero.anomalias.fugaLinea1 = !estadoInvernadero.anomalias.fugaLinea1;
-    btnFugaA1.innerText = estadoInvernadero.anomalias.fugaLinea1 ? "🔧 Reparar Rotura Línea 1" : "🚨 Provocar Rotura Línea 1";
-    btnFugaA1.className = estadoInvernadero.anomalias.fugaLinea1
+    estadoInvernadero.anomalias.fugaDetectada = !estadoInvernadero.anomalias.fugaDetectada;
+    btnFugaA1.innerText = estadoInvernadero.anomalias.fugaDetectada ? "🔧 Reparar Rotura" : "🚨 Provocar Rotura";
+    btnFugaA1.className = estadoInvernadero.anomalias.fugaDetectada
         ? "w-full bg-green-700 hover:bg-green-600 border border-green-500 text-white text-xs font-bold py-1.5 rounded-lg transition-all active:scale-95 text-center mt-2"
         : "w-full bg-red-900/40 hover:bg-red-800 border border-red-500/50 text-white text-xs font-bold py-1.5 rounded-lg transition-all active:scale-95 text-center mt-2 opacity-80";
     enviarComandoAlESP32();
 });
 
-const elementoHumedad = [
-    document.getElementById("hum-z1"), document.getElementById("hum-z2"),
-    document.getElementById("hum-z3"), document.getElementById("hum-z4")
-];
-const elementoNutricion = [
-    document.getElementById("nut-z1"), document.getElementById("nut-z2"),
-    document.getElementById("nut-z3"), document.getElementById("nut-z4")
-];
+const elementoHumedadGrupo = [document.getElementById("hum-g1"), document.getElementById("hum-g2")];
+const elementoNutricionGrupo = [document.getElementById("nut-g1"), document.getElementById("nut-g2")];
 
 const btnLight = document.getElementById("btn-light");
 const botonesZonasLuces = [
@@ -61,67 +52,70 @@ const botonesZonasLuces = [
 
 // PROCESAMIENTO DE DATOS VISUALES
 function procesarMensajeESP32(datosReales) {
-    // --- BATERÍA ---
+    //BATERÍA
     elementoBateria.innerText = Math.floor(datosReales.telemetria.bateria) + "%";
     elementoBateria.style.color = datosReales.telemetria.bateria <= 20 ? "red" : (datosReales.telemetria.bateria <= 50 ? "orange" : "");
 
-    // --- ZONAS (Humedad y Nutrición) ---
-    for (let i = 0; i < datosReales.telemetria.humedades.length; i++) {
-        let hum = datosReales.telemetria.humedades[i];
-        elementoHumedad[i].innerText = hum + "%";
-        elementoHumedad[i].className = hum <= 47 ? "text-orange-400 font-mono font-bold" : "text-blue-300 font-mono";
+    //ZONAS (Humedad y Nutrición)
+    let valoresHum = [datosReales.telemetria.humedades[0], datosReales.telemetria.humedades[2]];
+    let valoresNut = [datosReales.telemetria.nutricion[0], datosReales.telemetria.nutricion[2]];
+
+    for (let i = 0; i < 2; i++) {
+        let hum = valoresHum[i];
+        elementoHumedadGrupo[i].innerText = hum + "%";
+        elementoHumedadGrupo[i].className = hum <= 30 ? "text-red-400 font-mono font-bold animate-pulse" : "text-blue-300 font-mono font-bold";
         
-        let nut = datosReales.telemetria.nutricion[i];
+        let nut = valoresNut[i];
         if(nut <= 30){
-            elementoNutricion[i].innerHTML = nut + "% <span title='Nutrición crítica'>⚠️</span>";
-            elementoNutricion[i].className = "text-red-400 font-mono font-bold animate-pulse";
+            elementoNutricionGrupo[i].innerHTML = nut + "% <span title='Nutrición crítica'>⚠️</span>";
+            elementoNutricionGrupo[i].className = "text-red-400 font-mono font-bold animate-pulse";
         }else{
-            elementoNutricion[i].innerText = nut + "%";
-            elementoNutricion[i].className = "text-green-400 font-mono";
+            elementoNutricionGrupo[i].innerText = nut + "%";
+            elementoNutricionGrupo[i].className = "text-green-400 font-mono font-bold";
         }
     }
 
-    // --- CONTROL DE AGUA PURA (Válvulas 1 y 2) ---
+    //CONTROL DE AGUA PURA (grupo 1)
     let valvulasAguaActivas = 0;
     
     if (datosReales.actuadores.valvulasAgua[0]) {
-        btnValvulaA1.innerText = "🟢 Válvula 1 (Abierta)";
-        btnValvulaA1.className = "w-full bg-blue-600 hover:bg-blue-500 border border-blue-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4 shadow-[0_0_15px_rgba(59,130,246,0.5)]";
+        btnValvulaA1.innerText = "🔵 Agua G. Superior (Abierta)";
+        btnValvulaA1.className = "w-full bg-blue-600 border border-blue-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 shadow-[0_0_15px_rgba(59,130,246,0.5)] cursor-default";
         valvulasAguaActivas++;
     } else {
-        btnValvulaA1.innerText = "⭕ Válvula 1 (Cerrada)";
-        btnValvulaA1.className = "w-full bg-gray-800 hover:bg-blue-900 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4";
+        btnValvulaA1.innerText = "⭕ Agua G. Superior (Cerrada)";
+        btnValvulaA1.className = "w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default";
     }
 
     if (datosReales.actuadores.valvulasAgua[1]) {
-        btnValvulaA2.innerText = "🟢 Válvula 2 (Abierta)";
-        btnValvulaA2.className = "w-full bg-blue-600 hover:bg-blue-500 border border-blue-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4 shadow-[0_0_15px_rgba(59,130,246,0.5)]";
+        btnValvulaA2.innerText = "🔵 Agua G. Inferior (Abierta)";
+        btnValvulaA2.className = "w-full bg-blue-600 border border-blue-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 shadow-[0_0_15px_rgba(59,130,246,0.5)] cursor-default";
         valvulasAguaActivas++;
     } else {
-        btnValvulaA2.innerText = "⭕ Válvula 2 (Cerrada)";
-        btnValvulaA2.className = "w-full bg-gray-800 hover:bg-blue-900 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4";
+        btnValvulaA2.innerText = "⭕ Agua G. Inferior (Cerrada)";
+        btnValvulaA2.className = "w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default";
     }
     caudalAguaTxt.innerText = (valvulasAguaActivas * 15) + " L/m";
 
-    // --- CONTROL DE FERTIRRIGACIÓN (Válvulas 3 y 4) ---
+    //CONTROL DE FERTIRRIGACIÓN (grupo 2)
     let valvulasAbonoActivas = 0;
 
     if (datosReales.actuadores.valvulasAbono[0]) {
-        btnValvulaF1.innerText = "🟢 Válvula 3 (Abierta)";
-        btnValvulaF1.className = "w-full bg-green-600 hover:bg-green-500 border border-green-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4 shadow-[0_0_15px_rgba(34,197,94,0.5)]";
+        btnValvulaF1.innerText = "🟢 Abono G. Superior (Inyectando)";
+        btnValvulaF1.className = "w-full bg-green-600 border border-green-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 shadow-[0_0_15px_rgba(34,197,94,0.5)] cursor-default";
         valvulasAbonoActivas++;
     } else {
-        btnValvulaF1.innerText = "⭕ Válvula 3 (Cerrada)";
-        btnValvulaF1.className = "w-full bg-gray-800 hover:bg-green-900 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4";
+        btnValvulaF1.innerText = "⭕ Abono G. Superior (Cerrado)";
+        btnValvulaF1.className = "w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default";
     }
 
     if (datosReales.actuadores.valvulasAbono[1]) {
-        btnValvulaF2.innerText = "🟢 Válvula 4 (Abierta)";
-        btnValvulaF2.className = "w-full bg-green-600 hover:bg-green-500 border border-green-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all active:scale-95 text-left pl-4 shadow-[0_0_15px_rgba(34,197,94,0.5)]";
+        btnValvulaF2.innerText = "🟢 Abono G. Inferior (Inyectando)";
+        btnValvulaF2.className = "w-full bg-green-600 border border-green-400 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 shadow-[0_0_15px_rgba(34,197,94,0.5)] cursor-default";
         valvulasAbonoActivas++;
     } else {
-        btnValvulaF2.innerText = "⭕ Válvula 4 (Cerrada)";
-        btnValvulaF2.className = "w-full bg-gray-800 hover:bg-green-900 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4";
+        btnValvulaF2.innerText = "⭕ Abono G. Inferior (Cerrado)";
+        btnValvulaF2.className = "w-full bg-gray-800 border border-gray-600 text-white text-xs font-bold py-2.5 rounded-lg transition-all text-left pl-4 cursor-default";
     }
     caudalAbonoTxt.innerText = (valvulasAbonoActivas * 10) + " L/m";
 
@@ -139,7 +133,7 @@ function procesarMensajeESP32(datosReales) {
         window.Controlador3D.setEstadoValvula('motor_abono', null, bombaAbonoEncendida);
     }
 
-    // --- LUCES ---
+    //LUCES
     for (let i = 0; i < datosReales.actuadores.luces.length; i++) {
         let luzEncendida = datosReales.actuadores.luces[i];
         if (window.Controlador3D) window.Controlador3D.setEstadoLuz(i, luzEncendida);
@@ -159,7 +153,7 @@ function procesarMensajeESP32(datosReales) {
         btnLight.className = "bg-yellow-600 hover:bg-yellow-500 w-64 py-3 rounded-lg font-bold shadow-[0_0_15px_rgba(234,179,8,0.5)] hover:shadow-[0_0_25px_rgba(234,179,8,0.8)] transition-all active:scale-95 text-left pl-6 text-white";
     }
 
-    // --- TANQUES NIVEL VISUAL ---
+    //TANQUES NIVEL VISUAL 
     let nAgua = Math.floor(datosReales.telemetria.tanqueAgua);
     nivelAguaTxt.innerText = nAgua + "%";
     nivelAguaTxt.className = nAgua <= 20 ? "font-mono font-bold text-red-400 text-sm ml-1 animate-pulse" : "font-mono font-bold text-blue-400 text-sm ml-1";
@@ -168,130 +162,65 @@ function procesarMensajeESP32(datosReales) {
     nivelAbonoTxt.innerText = nAbono + "%";
     nivelAbonoTxt.className = nAbono <= 20 ? "font-mono font-bold text-red-400 text-sm ml-1 animate-pulse" : "font-mono font-bold text-green-400 text-sm ml-1";
 
+    if (datosReales.anomalias.fugaDetectada) {
+        btnFugaA1.innerText = "🔧 Reparar Rotura";
+        btnFugaA1.className = "w-full bg-green-700 hover:bg-green-600 border border-green-500 text-white text-xs font-bold py-1.5 rounded-lg transition-all active:scale-95 text-center mt-2";
+    } else {
+        btnFugaA1.innerText = "🚨 Provocar Rotura";
+        btnFugaA1.className = "w-full bg-red-900/40 hover:bg-red-800 border border-red-500/50 text-white text-xs font-bold py-1.5 rounded-lg transition-all active:scale-95 text-center mt-2 opacity-80";
+    }
+
     //PANEL ALERTAS
     if (window.actualizarAlertas) window.actualizarAlertas(datosReales);
 }
 
 // EVENTOS DE BOTONES
-function enviarComandoAlESP32() {
-    procesarMensajeESP32(estadoInvernadero); 
-}
-
-btnValvulaA1.addEventListener('click', () => { estadoInvernadero.actuadores.valvulasAgua[0] = !estadoInvernadero.actuadores.valvulasAgua[0]; enviarComandoAlESP32(); });
-btnValvulaA2.addEventListener('click', () => { estadoInvernadero.actuadores.valvulasAgua[1] = !estadoInvernadero.actuadores.valvulasAgua[1]; enviarComandoAlESP32(); });
-btnValvulaF1.addEventListener('click', () => { estadoInvernadero.actuadores.valvulasAbono[0] = !estadoInvernadero.actuadores.valvulasAbono[0]; enviarComandoAlESP32(); });
-btnValvulaF2.addEventListener('click', () => { estadoInvernadero.actuadores.valvulasAbono[1] = !estadoInvernadero.actuadores.valvulasAbono[1]; enviarComandoAlESP32(); });
-
-btnLight.addEventListener("click", () => {
-    let prenderTodas = estadoInvernadero.actuadores.luces.includes(false);
-    estadoInvernadero.actuadores.luces = [prenderTodas, prenderTodas, prenderTodas, prenderTodas];
-    enviarComandoAlESP32();
+btnFugaA1.addEventListener("click", () => {
+    console.log("Enviando orden de fuga...");
+    clienteMQTT.publish("yuki/invernadero/comandos", "f");
 });
 
+// Botón Maestro de Luces
+btnLight.addEventListener("click", () => {
+    console.log("Enviando orden a todas las luces...");
+    clienteMQTT.publish("yuki/invernadero/comandos", "t");
+});
+
+// Botones individuales de cada Zona
 for (let i = 0; i < botonesZonasLuces.length; i++) {
     botonesZonasLuces[i].addEventListener("click", () => {
-        estadoInvernadero.actuadores.luces[i] = !estadoInvernadero.actuadores.luces[i];
-        enviarComandoAlESP32();
+        let comandoZona = (i + 1).toString();
+        console.log("Enviando orden a luz zona:", comandoZona);
+        clienteMQTT.publish("yuki/invernadero/comandos", comandoZona);
     });
 }
 
-// SIMULACIÓN (REEMPLAZA AL ESP32 TEMPORALMENTE)
-setInterval(() => {
-    let vAguaAbiertas = estadoInvernadero.actuadores.valvulasAgua.filter(Boolean).length;
-    let vAbonoAbiertas = estadoInvernadero.actuadores.valvulasAbono.filter(Boolean).length;
-    let lucesEncendidas = estadoInvernadero.actuadores.luces.filter(Boolean).length;
+//fertirriego
+btnValvulaF1.addEventListener("click", () => {
+    console.log("Ordenando inyección de abono Grupo Superior...");
+    clienteMQTT.publish("yuki/invernadero/comandos", "a");
+});
 
-    // --- BATERÍA ---
-    let consumo = (vAguaAbiertas * 1) + (vAbonoAbiertas * 1) + (lucesEncendidas * 0.5);
-    if(consumo > 0){
-        estadoInvernadero.telemetria.bateria -= consumo;
-        if(estadoInvernadero.telemetria.bateria < 0) estadoInvernadero.telemetria.bateria = 0;
-    } else {
-        estadoInvernadero.telemetria.bateria = Math.min(100, estadoInvernadero.telemetria.bateria + 2);
+btnValvulaF2.addEventListener("click", () => {
+    console.log("Ordenando inyección de abono Grupo Inferior...");
+    clienteMQTT.publish("yuki/invernadero/comandos", "b");
+});
+
+//CONEXIÓN MQTT
+const clienteMQTT = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+
+clienteMQTT.on('connect', () => {
+    console.log("🟢 Gemelo Digital conectado al Broker MQTT");
+    //escuchar la telemetría del ESP32
+    clienteMQTT.subscribe("yuki/invernadero/telemetria");
+});
+
+clienteMQTT.on('message', (topic, mensaje) => {
+    if (topic === "yuki/invernadero/telemetria") {
+        let jsonString = mensaje.toString();
+        console.log("📥 Telemetría recibida del ESP32:", jsonString);
+
+        let datosReales = JSON.parse(mensaje.toString());
+        procesarMensajeESP32(datosReales); 
     }
-
-    // --- TANQUES ---
-    if (vAguaAbiertas > 0) {
-        let drenaje = 0.5 * vAguaAbiertas;
-        
-        if (estadoInvernadero.anomalias.fugaLinea1 && estadoInvernadero.actuadores.valvulasAgua[0]) {
-            drenaje = 4.0; 
-        }
-        estadoInvernadero.telemetria.tanqueAgua -= drenaje;
-        if (estadoInvernadero.telemetria.tanqueAgua <= 0) {
-            estadoInvernadero.telemetria.tanqueAgua = 0;
-            estadoInvernadero.actuadores.valvulasAgua = [false, false]; 
-        }
-    }
-    if (vAbonoAbiertas > 0) {
-        estadoInvernadero.telemetria.tanqueAbono -= (0.3 * vAbonoAbiertas);
-        if (estadoInvernadero.telemetria.tanqueAbono <= 0) {
-            estadoInvernadero.telemetria.tanqueAbono = 0;
-            estadoInvernadero.actuadores.valvulasAbono = [false, false]; 
-        }
-    }
-
-    // --- HUMEDAD Y NUTRICIÓN ---
-    //sectores superiores
-    for(let i = 0; i <= 1; i++){
-        let recibeAgua = estadoInvernadero.actuadores.valvulasAgua[0];
-        let recibeAbono = estadoInvernadero.actuadores.valvulasAbono[0];
-
-        if (estadoInvernadero.anomalias.fugaLinea1) {
-            recibeAgua = false; 
-        }
-
-        if(recibeAgua || recibeAbono){
-            estadoInvernadero.telemetria.humedades[i] = Math.min(100, estadoInvernadero.telemetria.humedades[i] + (recibeAgua ? 5 : 4));
-        }else{
-            estadoInvernadero.telemetria.humedades[i] = Math.max(0, estadoInvernadero.telemetria.humedades[i] - 1);
-        }
-
-        if(recibeAbono){
-            estadoInvernadero.telemetria.nutricion[i] = Math.min(100, estadoInvernadero.telemetria.nutricion[i] + 2);
-        }else{
-            estadoInvernadero.telemetria.nutricion[i] = Math.max(0, Math.random() > 0.6 ? estadoInvernadero.telemetria.nutricion[i] - 1 : estadoInvernadero.telemetria.nutricion[i]);
-        }
-    }
-
-    for(let i = 2; i <= 3; i++){
-        let recibeAgua = estadoInvernadero.actuadores.valvulasAgua[1];
-        let recibeAbono = estadoInvernadero.actuadores.valvulasAbono[1];
-
-        if(recibeAgua || recibeAbono){
-            estadoInvernadero.telemetria.humedades[i] = Math.min(100, estadoInvernadero.telemetria.humedades[i] + (recibeAgua ? 5 : 4));
-        }else{
-            estadoInvernadero.telemetria.humedades[i] = Math.max(0, estadoInvernadero.telemetria.humedades[i] - 1);
-        }
-
-        if(recibeAbono){
-            estadoInvernadero.telemetria.nutricion[i] = Math.min(100, estadoInvernadero.telemetria.nutricion[i] + 2);
-        }else{
-            estadoInvernadero.telemetria.nutricion[i] = Math.max(0, Math.random() > 0.6 ? estadoInvernadero.telemetria.nutricion[i] - 1 : estadoInvernadero.telemetria.nutricion[i]);
-        }
-    }
-
-    //SISTEMA ANTI SOBRERIEGO Y ANTI SOBRENUTRICIÓN
-    //zona 1 y 2 (superior)
-    if(estadoInvernadero.telemetria.humedades[0] >= 100 || estadoInvernadero.telemetria.humedades[1] >= 100){
-        estadoInvernadero.actuadores.valvulasAgua[0] = false;
-        estadoInvernadero.actuadores.valvulasAbono[0] = false;
-    }
-    if(estadoInvernadero.telemetria.nutricion[0] >= 100 || estadoInvernadero.telemetria.nutricion[1] >= 100){
-        estadoInvernadero.actuadores.valvulasAbono[0] = false;
-    }
-
-    //zona 2 y 3 (inferior)
-    if(estadoInvernadero.telemetria.humedades[2] >= 100 || estadoInvernadero.telemetria.humedades[3] >= 100){
-        estadoInvernadero.actuadores.valvulasAgua[1] = false;
-        estadoInvernadero.actuadores.valvulasAbono[1] = false;
-    }
-    if(estadoInvernadero.telemetria.nutricion[2] >= 100 || estadoInvernadero.telemetria.nutricion[3] >= 100){
-        estadoInvernadero.actuadores.valvulasAbono[1] = false;
-    }
-
-    procesarMensajeESP32(estadoInvernadero);
-
-}, 4000);
-
-procesarMensajeESP32(estadoInvernadero);
+});
