@@ -56,7 +56,7 @@ function procesarMensajeESP32(datosReales) {
     elementoBateria.innerText = Math.floor(datosReales.telemetria.bateria) + "%";
     elementoBateria.style.color = datosReales.telemetria.bateria <= 20 ? "red" : (datosReales.telemetria.bateria <= 50 ? "orange" : "");
 
-    //ZONAS (Humedad y Nutrición)
+    //ZONAS
     let valoresHum = [datosReales.telemetria.humedades[0], datosReales.telemetria.humedades[2]];
     let valoresNut = [datosReales.telemetria.nutricion[0], datosReales.telemetria.nutricion[2]];
 
@@ -180,13 +180,13 @@ btnFugaA1.addEventListener("click", () => {
     clienteMQTT.publish("yuki/invernadero/comandos", "f");
 });
 
-// Botón Maestro de Luces
+//botton maestro luces
 btnLight.addEventListener("click", () => {
     console.log("Enviando orden a todas las luces...");
     clienteMQTT.publish("yuki/invernadero/comandos", "t");
 });
 
-// Botones individuales de cada Zona
+//botones individuales luz
 for (let i = 0; i < botonesZonasLuces.length; i++) {
     botonesZonasLuces[i].addEventListener("click", () => {
         let comandoZona = (i + 1).toString();

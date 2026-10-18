@@ -3,12 +3,12 @@ const listaAlertas = document.getElementById('lista-alertas');
 window.actualizarAlertas = function(datos){
     let alertas = [];
 
-    //ALERTA DE FUGA DESDE EL HARDWARE (EDGE AI)
+    //ALERTA DE FUGA DESDE EL HARDWARE
     if(datos.anomalias.fugaDetectada){
         alertas.push(`[SISTEMA HIDRÁULICO] 🔴 CRÍTICO: Fuga detectada por la IA del microcontrolador. Cierre automático de válvulas activado.`);
     }
 
-    //FALLA DE PRESIÓN (ESTANQUES VACÍOS)
+    //FALLA DE PRESION EN ESTANQUES
     if (datos.telemetria.tanqueAgua === 0) {
         alertas.push(`[SISTEMA HIDRÁULICO] 🔴 CRÍTICO: Corte en el flujo de riego. Presión cero en red de agua.`);
     }

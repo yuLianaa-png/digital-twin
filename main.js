@@ -1,5 +1,4 @@
 const scene = new THREE.Scene();
-//scene.background = new THREE.Color(0x1a202c);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 5, 7);
@@ -50,7 +49,7 @@ window.Controlador3D = {
             manguera.material.emissiveIntensity = encendida ? 0.6 : 0;
         }
 
-        // 2. Iluminar motores usando los comandos especiales
+        //iluminar motores
         if (tipo === 'motor_agua' && this.bombas['riego']) {
             this.bombas['riego'].material.color.setHex(encendida ? colorAgua : apagadoAgua);
             this.bombas['riego'].material.emissive.setHex(encendida ? colorAgua : 0x000000);
@@ -131,8 +130,7 @@ crearBomba(0.3, 0.1, -1.2, 'abono');
 
 //mangueras
 const P = (x, z, y = -0.05) => new THREE.Vector3(x, y, z);
- 
-// Borde derecho del invernadero (donde terminan las mangueras). Ajusta si hace falta.
+
 const BORDE_Z = -0.66;
  
 function crearManguera(puntos) {
@@ -144,24 +142,24 @@ function crearManguera(puntos) {
     return manguera;
 }
  
-// Línea 1 (AGUA, arriba)
+
 window.Controlador3D.manguerasAgua[0] = crearManguera([
     P(-0.30, -1.18, 0.12), P(-0.31, -0.92), P(-0.32, -0.78), P(-0.32, BORDE_Z)
 ]);
  
-// Línea 2 (AGUA, abajo)
+
 window.Controlador3D.manguerasAgua[1] = crearManguera([
     P(-0.12, -1.18, 0.12), P(-0.07, -0.93), P(0.04, -0.85), P(0.12, -0.78),
     P(0.23, -0.75), P(0.29, BORDE_Z)
 ]);
  
-// Línea 3 (ABONO, arriba)
+
 window.Controlador3D.manguerasAbono[0] = crearManguera([
     P(0.20, -1.18, 0.10), P(0.07, -0.95, 0.02), P(-0.03, -0.86),
     P(-0.14, -0.76), P(-0.24, -0.68), P(-0.25, BORDE_Z)
 ]);
  
-// Línea 4 (ABONO, abajo)
+
 window.Controlador3D.manguerasAbono[1] = crearManguera([
     P(0.30, -1.18, 0.12), P(0.31, -0.92), P(0.33, -0.78), P(0.35, BORDE_Z)
 ]);
